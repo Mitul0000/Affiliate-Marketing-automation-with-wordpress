@@ -54,7 +54,7 @@ then notifies you on Telegram.
 
 ## Setup
 
-1. Import `workflow.json` into your n8n instance
+1. Import `.json` into your n8n instance
 2. Set up credentials for:
    - Google Sheets OAuth2
    - OpenAI API key
