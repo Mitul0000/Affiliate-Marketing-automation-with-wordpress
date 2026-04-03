@@ -1,0 +1,624 @@
+{
+  "name": "Affiliate Marketing with Wordpress",
+  "nodes": [
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o-mini"
+        },
+        "options": {}
+      },
+      "id": "069e9011-a821-4622-ba9e-1ce95d522e2c",
+      "name": "OpenAI Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "position": [
+        80,
+        608
+      ],
+      "typeVersion": 1.2
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n\"slug\": \"rpo-benefits-recruitment\",\n\"title\": \"7 Key Advantages of RPO for Modern Recruitment\",\n\"meta\": \"Explore how Recruitment Process Outsourcing (RPO) enhances hiring efficiency, reduces costs, and expands talent pools for businesses seeking top candidates.\"\n}"
+      },
+      "id": "28fcdf2c-ff98-4483-8fbb-15966cc487c3",
+      "name": "Structured Output Parser",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "position": [
+        304,
+        608
+      ],
+      "typeVersion": 1.2
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=**Create a slug, blog post title, and meta description for the following blog post:**\n\n{{ $json.content.parts[0].text }}\n\n**Slug Guidelines:**\n- Keep it concise (4-5 words maximum).\n- Include the primary keyword related to recruitment or HR.\n- Use hyphens to separate words.\n- Avoid unnecessary words, articles, or prepositions.\n- Ensure it reflects the main topic of the blog post.\n- Make it readable and relevant for both users and search engines.\n\n**Title Guidelines:**\nAs this is a review post the title format should be like name+review then mention other things .  and this review is made after 30 days it should be undertood by the title of the post. the title should be totally seo optimized and unique. Example:-Affiliate Engine AI Review: My 30-Day Experience \ndo not follow everytime the same things the title shoould be unique and also it should follow all of the above.\n\n**Meta Description Guidelines:**\n- Avoid AI words like \"Transform\" or \"Revolutionize\" and similar overused terms.\n- Be concise: Limit to 150-160 characters to ensure full visibility in search results.\n- mention the main keyword the name+review (not everytime the same use your brain to find the best keyword) \n- Provide value: Clearly convey the benefits or insights readers will gain from the article.\n- Be engaging: Use action-oriented language or a thought-provoking question to encourage clicks.\n- Align with content: Accurately reflect the blog post's content to meet user expectations and reduce bounce rates.\n- Highlight expertise: Subtly emphasize SocialFind's authority in the recruitment field.\n\nYour output must be a single valid JSON object with these 3 fields:\n-slug: The slug\n-title: The blog post title\n-meta: The meta description  \n-focus keyword:generally the product name\n\nEach should be presented without any additional text, explanation, quotation marks, or formatting.\n",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "id": "fc201518-7a24-4fb6-8707-ae5c646687d6",
+      "name": "Create Title, Slug, Meta",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "position": [
+        112,
+        464
+      ],
+      "typeVersion": 1.8,
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o-mini",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=Only output the HTML content without preamble or further explanation. Generate WordPress-compatible HTML for a blog post based on the provided content.\n\n### CONTENT PROCESSING:\n- Process all content from {{ $json.content.parts[0].text }}\n- Preserve all original facts, information, and URLs\n- Format according to the specifications below\n\n\n### STYLING REQUIREMENTS:\n- Style Override: Include a style section with !important declarations\n- Links: All hyperlinks, TOC items, and FAQ questions must be #00c2ff (blue)\n- Headings: All headings need a bottom border in #00c2ff with padding\n- Spacing: Add <br><br> between each major section\n\n### ENGAGEMENT FORMATTING:\n- Use bold, italics, bullet points, quotes, and highlighting for emphasis\n- Create proper paragraph structure with appropriate line breaks\n- NO emojis allowed\n- Use whitespace strategically for readability\n- do not modify the actual content. just format it as directed.\n\n### HYPERLINK HANDLING (CRITICAL):\n- When URLs appear next to keyphrases (e.g., \"AI tools (https://example.com)\")\n- Convert to: <a href=\"https://example.com\" style=\"color: #00c2ff !important;\">AI tools</a>\n- The KEYPHRASE must be linked, never the URL itself\n\n### WORDPRESS COMPATIBILITY:\n- Use WordPress block classes (wp-block-heading, wp-block-paragraph, etc.)\n- Add heading IDs starting with \"h-\" for better TOC linking\n- Ensure all styles use !important to override theme styles\n\nDO NOT include any explanations, code tags, or comments. Output ONLY the raw HTML.   give the h1 h2 h3 heading according to the priority\n"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "8de3580f-2f3c-4bc3-9e8d-0733b289684a",
+      "name": "Create HTML",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "position": [
+        112,
+        80
+      ],
+      "typeVersion": 1.8,
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "numberInputs": 3
+      },
+      "id": "bec90058-a8b3-4487-8157-cb851d1b5406",
+      "name": "Merge",
+      "type": "n8n-nodes-base.merge",
+      "position": [
+        560,
+        352
+      ],
+      "typeVersion": 3
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://digifello.com/wp-json/wp/v2/media",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "wordpressApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Disposition",
+              "value": "=attachment; filename=\"cover-image-{{ $('Wordpress').item.json.id }}.jpeg\""
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "binaryData",
+        "inputDataFieldName": "data",
+        "options": {}
+      },
+      "id": "6c8fac1f-d262-4a84-b0f2-01ee0a9e0969",
+      "name": "Upload Image to Wordpress",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        464,
+        912
+      ],
+      "typeVersion": 4.2
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://digifello.com/wp-json/wp/v2/posts/{{ $('Wordpress').item.json.id }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "wordpressApi",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "featured_media",
+              "value": "={{ $json.id }}"
+            }
+          ]
+        },
+        "options": {
+          "allowUnauthorizedCerts": true
+        }
+      },
+      "id": "9ff1c9e4-16bf-4314-a70d-e311ee1924a7",
+      "name": "Set Image on Wordpress Post",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        704,
+        912
+      ],
+      "typeVersion": 4.2
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are part of a team that creates high-quality review product blog posts. Your goal is to produce engaging, SEO-optimized content which will help the user to buy that product quickly. The review should be like review after 30 days of using.\n\nYou are provided with the following information:\n\n- Query: The main topic for this week's blog post, representing the most trending news in the recruitment space.\n\n- Other keywords: A list of high-search-volume keywords related to AI consulting and n8n workflows. Incorporate these naturally into the blog post where relevant, without forcing them or changing the post's meaning.\n\n- Research findings: Detailed information from reputable sources related to the blog topic. Your post must be based on this research.\n\nGiven this information, write a comprehensive blog post that:\n\n- It should be 30 days after review type.\n- The format should be atractive and it should be human friendly.\n- The review should contain everything that will insists the reader to buy it.\n- use the affiliated link in the review and tell user that what benefits he/she will get if he/she buys from here.\n- It should contains each and every details of the product.\n- The article should be SEO friendly ready to rank in the first page.\n_ Write the article keeping in mind about the focus keyword that is product name + review. \n- Is between 800 to 900 words long.\n- If this information not enough to write a complete post then research from the internet and find more details and write it.\n- It should be written in very easy and human laguage so that even a class 5 student can be able to understand it but along with this maintain professionalism as well.\n- do not mention the title in the body. just wwrite the body content only\n\nCreate the entire blog post draft in your first output. Don't stop or cut it short.\n\nYour output must be the blog post and nothing else.\n\n1. Introduction & Basics\nStart with a catchy line or question. Mention product name, vendor, price, and where to buy (with link). Explain what it does and who it’s for.\n\n2. My Experience\nShare when and how you used it, first impressions, ease of use, setup, and standout early features.\n\n3. Key Features & Benefits\nList main features in short bullets or small paragraphs. For each, explain how it helps in real life. Mention performance, design, AI, or usability examples.\n\n4. Pros & Cons\nUse clear bullet points. Be honest—what works great and what needs improvement.\n\n5. Value for Money\nExplain if the price is fair for what it offers. Mention deals, upgrades, bonuses, or comparisons with similar tools.\n\n6. Best For / Not For\nDescribe ideal users (marketers, students, freelancers, etc.). Note who might not benefit.\n\n7. FAQs\nAdd 4–6 quick Q&As (e.g., Is it beginner-friendly? Refund policy? Upsells? Works on mobile?).\n\n8. 30-Day / Long-Term Update\nMention durability, real results, and if performance improved or dropped over time.\n\n9. Final Verdict\nSummarize your experience, give a clear recommendation (yes/no), and end with a call-to-action + affiliate link.\n\n-Make it little differnt as in our content it also include reiew after 30 days . but all these should be answered in the article\n\nHere are the details of this blog post project:\n\nName:- {{ $json.Name }}\nAffiliate link:- {{ $json['Affiliate link'] }}\nAbout:- {{ $json.About }}\nCategory:- {{ $json.Category }}\n",
+        "options": {}
+      },
+      "id": "5a4fd0af-327b-458e-b50e-24a44310344e",
+      "name": "Copywriter AI Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "position": [
+        -672,
+        352
+      ],
+      "typeVersion": 1.8
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "0afb2988-1481-4b04-b16d-fb33c50a16d0",
+              "name": "content",
+              "type": "string",
+              "value": "={{ $json.data[0].message.content.replaceAll('```html', '').replaceAll('```','') }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "08302687-2045-40ef-a560-b4333ac6b1f8",
+      "name": "Cleanup HTML ",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        768,
+        608
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "url": "={{ $json['image-url'] }}",
+        "options": {}
+      },
+      "id": "f32f1762-758a-4b13-be0b-e5409e83b208",
+      "name": "GET Image",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        272,
+        912
+      ],
+      "typeVersion": 4.2
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1f0541df-05ab-4e3d-a5d8-3904579fc8a9",
+              "name": "image-url",
+              "type": "string",
+              "value": "={{ $('Get row(s) in sheet').item.json['Image link'] }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "de2f97cc-4b33-4378-b6e1-af6300ce263f",
+      "name": "Set Image URL",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        64,
+        912
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "chatId": "=5994697343",
+        "text": "=Success! Your blog post was created at {{ $now }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "95cd1240-7f4a-4d25-a0af-98f71c89da43",
+      "name": "Send Success Message to Telegram",
+      "type": "n8n-nodes-base.telegram",
+      "position": [
+        1232,
+        912
+      ],
+      "webhookId": "91f7d710-450a-4b66-8e46-82f53492351e",
+      "typeVersion": 1.2
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o-mini"
+        },
+        "options": {}
+      },
+      "id": "8bcb09c2-1d09-4ce2-8542-fb1083734273",
+      "name": "gpt-4o-mini",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "position": [
+        -688,
+        528
+      ],
+      "typeVersion": 1.2
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "id": "733226ec-8aef-4840-a261-5e34fc2a9a0c",
+      "name": "Combine Blog Details",
+      "type": "n8n-nodes-base.aggregate",
+      "position": [
+        768,
+        352
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1xVIwtiN_Vqyitf1sJmmU1Uyz_I2dRyoorrFdN_D5VAg",
+          "mode": "list",
+          "cachedResultName": "Wordpress automate",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1xVIwtiN_Vqyitf1sJmmU1Uyz_I2dRyoorrFdN_D5VAg/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "Author (Fixed)",
+              "lookupValue": "Mitul"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -912,
+        352
+      ],
+      "id": "ee9a605e-6db8-438d-bc97-6b8b9f98151b",
+      "name": "Get row(s) in sheet"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 6
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -1120,
+        352
+      ],
+      "id": "038729a0-505d-4407-8b1a-a6ed151712fd",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-flash",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-flash"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=Rewrite this article so it sounds as human as possible.\n\nChange at least two or three words in every sentence. Use really simple synonyms.\n\nMix things up. Sometimes rewrite sentences in odd or funny ways, just how people do sometimes.\n\nDo not use short forms like \"I'm\". Spell the words fully.\n\nMake a few grammar mistakes on purpose. Try not to use too many commas because people forget to put those in.\n\nUse words and sentences that a 10-year-old can understand.\n\nWhen you see a list or place where you can do bullet points, write it that way.\n\nAlways think about how this will look when it goes on Google, and make sure it is still easy for people to read.\n\nIf you believe something needs to be changed or added to make this prompt work better, just go ahead and do it.\nArticle :  {{ $json.output }}\nremember:- it is a article which will be published on google.no hey there in the front."
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1,
+      "position": [
+        -336,
+        352
+      ],
+      "id": "9c7e8a0d-4085-4a28-aafe-1a043c16ed0b",
+      "name": "Humanizer"
+    },
+    {
+      "parameters": {
+        "title": "={{ $('Combine Blog Details').item.json.data[2].output.title }}",
+        "additionalFields": {
+          "authorId": 1,
+          "content": "={{ $json.content }}",
+          "slug": "={{ $('Combine Blog Details').item.json.data[2].output.slug }}",
+          "status": "draft",
+          "commentStatus": "closed",
+          "pingStatus": "open",
+          "sticky": false,
+          "categories": [
+            111
+          ],
+          "postTemplate": {
+            "values": {}
+          }
+        }
+      },
+      "id": "be245608-2086-4f74-9e7f-7e1a6651acf2",
+      "name": "Wordpress",
+      "type": "n8n-nodes-base.wordpress",
+      "position": [
+        -240,
+        912
+      ],
+      "typeVersion": 1,
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://digifello.com/wp-json/wp/v2/posts/{{ $json.id }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "wordpressApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"meta\": {\n    \"rank_math_description\": \"{{ $('Create Title, Slug, Meta').item.json.output.meta }}\",\n    \"rank_math_focus_keyword\": \"{{ $('Get row(s) in sheet').item.json.Name }}\"\n  }\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        944,
+        912
+      ],
+      "id": "aae74385-74ee-4d00-8b72-1869cfa840c0",
+      "name": "HTTP Request"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Combine Blog Details",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GET Image": {
+      "main": [
+        [
+          {
+            "node": "Upload Image to Wordpress",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create HTML": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "gpt-4o-mini": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Copywriter AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cleanup HTML ": {
+      "main": [
+        [
+          {
+            "node": "Wordpress",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Image URL": {
+      "main": [
+        [
+          {
+            "node": "GET Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Create Title, Slug, Meta",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Copywriter AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Humanizer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Combine Blog Details": {
+      "main": [
+        [
+          {
+            "node": "Cleanup HTML ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Title, Slug, Meta": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Create Title, Slug, Meta",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload Image to Wordpress": {
+      "main": [
+        [
+          {
+            "node": "Set Image on Wordpress Post",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Image on Wordpress Post": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Copywriter AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Humanizer": {
+      "main": [
+        [
+          {
+            "node": "Create Title, Slug, Meta",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          },
+          {
+            "node": "Create HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wordpress": {
+      "main": [
+        [
+          {
+            "node": "Set Image URL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Send Success Message to Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "9a2f48e6-795f-4b07-9e98-979939916c3c",
+  "meta": {
+    "instanceId": "97d6fdcbd6f9d9846f1f3aa438fa58ab56471d7306a08e74247fa45f8048bbbc"
+  },
+  "id": "IAEcRVgkLH95MVSd",
+  "tags": []
+}
